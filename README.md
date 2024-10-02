@@ -20,26 +20,12 @@ yarn install
 npx sanity@latest init
 ```
 
-## Start the development server
+## Start the development server 💻
 
 ```bash
 npm run dev
 # or
 yarn dev
-```
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 You can check out this [Blog Post](https://medium.com/@yahyaelfard.ye/build-a-blog-next-js-14-sanity-io-cms-app-router-shadcn-ui-caching-react-hooks-seo-9f2d36a1d4fd) where I explain this project.
