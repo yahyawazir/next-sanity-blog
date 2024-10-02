@@ -1,113 +1,108 @@
+import React from "react";
+import { SanityTypes } from "@/@types";
+import ShineBorder from "@/components/magicui/shine-border";
+import StructuredData from "@/components/StructuredData";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { client } from "@/sanity/lib/client";
+import { urlFor } from "@/sanity/lib/image";
+import { siteData } from "@/site";
+import { CalendarIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { BreadcrumbList, WithContext } from "schema-dts";
 
-export default function Home() {
+
+
+export async function generateMetadata() {
+  const title = 'My Personal Blog', description = 'Welcome to my personal blog';
+  return {
+    applicationName: "My Personal Blog",
+    creator: 'Yahya Elfard',
+    metadataBase: new URL('http://localhost:3000'),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'en_AU'
+    },
+    authors: [{ name: 'Yahya Elfard' }],
+    referrer: 'origin-when-cross-origin'
+  }
+}
+
+export const revalidate = 60;
+async function getPosts() {
+  const query = `
+    *[_type == 'post'] | order(_createdAt desc)
+  `
+  return await client.fetch(query);
+}
+export default async function Home() {
+  const posts: SanityTypes.Post[] = await getPosts();
+
+  const breadcrumb: WithContext<BreadcrumbList> = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": siteData.url
+    }
+    ]
+  }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <>
+      <StructuredData data={breadcrumb} />
+      <div className="flex flex-col items-center w-full bg-background">
+        <div className='h-full w-full flex flex-1 max-w-[1500px] md:px-14 pt-24 px-4 flex-col space-y-4'>
+          {/* Optional MagicUI component */}
+          <ShineBorder
+            borderWidth={3} className="relative flex h-[250px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background"
+            color={["#A07CFE", "#FE8FB5", "#FFBE7B"]}>
+            <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-white bg-clip-text text-center text-4xl lg:text-6xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">My Personal Blog</span>
+          </ShineBorder>
+          <div className='grid md:grid-cols-3 gap-8 grid-cols-1'>
+            {
+              posts.map((post: SanityTypes.Post, key: number) => {
+                return (
+                  <Link key={key} className="space-y-5 group cursor-pointer" href={`/post/${post.slug.current}`}>
+                    <Card className="flex flex-col justify-between h-full">
+                      <div className="space-y-5">
+                        <div className="h-96 w-full overflow-hidden rounded-lg rounded-b-none relative">
+                          <div className="h-full w-full bg-black opacity-0 absolute z-20 group-hover:opacity-25 transition-all duration-200 ease-out" />
+                          <Image
+                            src={urlFor(post.image).url()}
+                            fill
+                            alt={post.title}
+                            className="h-full object-cover aspect-auto w-full group-hover:scale-150 group-hover:ease-in-out ease-in-out transition-all duration-500"
+                          />
+                        </div>
+                        <div className="space-y-3 px-4 py-2">
+                          <div className="flex flex-row items-center space-x-2">
+                            <CalendarIcon size={20} className="text-primary" />
+                            <p className="font-medium">{new Date(post._createdAt).toDateString()}</p>
+                          </div>
+                          <h2 className="text-2xl font-extrabold">{post.title}</h2>
+                          <p>{post.description}</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <Button className="w-full " variant={'outline'}>
+                          <p>Read more</p>
+                        </Button>
+                      </div>
+                    </Card>
+                  </Link>
+                )
+              })
+            }
+          </div>
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </>
   );
 }
